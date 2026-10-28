@@ -21,10 +21,9 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Dependencies & Windows Bindings
+      - name: Install Dependencies
         run: |
-          npm install --include=optional
-          npm install -D @rolldown/binding-win32-x64-msvc electron electron-builder
+          npm install --legacy-peer-deps
 
       - name: Compile React Frontend
         run: npm run build

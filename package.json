@@ -36,7 +36,10 @@
     "tailwindcss": "^4.3.3",
     "tsx": "^4.21.0",
     "typescript": "^7.0.2",
-    "vite-plugin-pwa": "^2.0.0"
+    "vite-plugin-pwa": "^2.0.0",
+    "@rolldown/binding-win32-x64-msvc": "1.2.15",
+    "electron": "^34.0.0",
+    "electron-builder": "^25.1.8"
   },
   "build": {
     "appId": "com.shuvo.idmpro",
