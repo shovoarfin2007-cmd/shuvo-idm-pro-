@@ -27,7 +27,7 @@ pip install -r requirements.txt
 echo.
 echo Step 3: Compiling Shuvo IDM to a Standalone Windows .EXE...
 echo (This may take 1-2 minutes to package all libraries and ffmpeg engines)
-pyinstaller --noconsole --onefile --clean --name="Shuvo_IDM_Pro" shuvo_idm_desktop.py
+pyinstaller --noconsole --onefile --clean --add-data "dist;dist" --name="Shuvo_IDM_Pro" shuvo_idm_desktop.py
 
 echo.
 if exist "dist\Shuvo_IDM_Pro.exe" (
