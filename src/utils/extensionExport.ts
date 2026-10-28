@@ -1,13 +1,14 @@
 /**
- * Chrome / Edge / Brave Extension Source Files for Shuvo IDM
- * Intercepts video streams & downloads and routes them to Shuvo IDM localhost:5000 bridge
+ * Chrome / Edge / Brave Extension Source Files for Shuvo IDM Pro
+ * Intercepts video streams (YouTube, Facebook, BongoBD, Toffee, TikTok, etc.)
+ * and torrent/magnet links, routing them to Shuvo IDM localhost:5000 bridge
  */
 
 export const EXTENSION_MANIFEST_JSON = `{
   "manifest_version": 3,
-  "name": "Shuvo IDM Integration Module",
-  "version": "2026.1.0",
-  "description": "Automatically intercept video streams and file downloads for Shuvo IDM Pro by SM Shuvo.",
+  "name": "Shuvo IDM Pro - Video & Download Interceptor",
+  "version": "2026.2.0",
+  "description": "Automatically intercept video streams (YouTube, Facebook, BongoBD) and files for Shuvo IDM Pro by SM Shuvo.",
   "permissions": [
     "downloads",
     "webRequest",
@@ -23,7 +24,18 @@ export const EXTENSION_MANIFEST_JSON = `{
   },
   "content_scripts": [
     {
-      "matches": ["*://*.youtube.com/*", "*://*.facebook.com/*", "*://*.instagram.com/*", "*://*.tiktok.com/*", "*://*.vimeo.com/*", "*://*/*"],
+      "matches": [
+        "*://*.youtube.com/*",
+        "*://*.facebook.com/*",
+        "*://*.bongobd.com/*",
+        "*://*.toffeelive.com/*",
+        "*://*.chorki.com/*",
+        "*://*.hoichoi.tv/*",
+        "*://*.tiktok.com/*",
+        "*://*.instagram.com/*",
+        "*://*.vimeo.com/*",
+        "*://*/*"
+      ],
       "js": ["content.js"],
       "css": ["content.css"],
       "run_at": "document_end"
@@ -31,7 +43,7 @@ export const EXTENSION_MANIFEST_JSON = `{
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Shuvo IDM Pro"
+    "default_title": "Shuvo IDM Pro Interceptor"
   }
 }
 `;
@@ -41,9 +53,11 @@ export const EXTENSION_BACKGROUND_JS = `// Shuvo IDM Chrome Extension - Backgrou
 
 const SHUVO_API_URL = "http://localhost:5000/download";
 
-// List of extensions to automatically intercept like real IDM
+// List of extensions to automatically intercept like real IDM (including Torrents & Bongo/HLS)
 const INTERCEPT_EXTENSIONS = [
   ".mp4", ".mkv", ".webm", ".avi", ".mov", ".flv",
+  ".m3u8", ".mpd", ".ts",
+  ".torrent", ".magnet",
   ".mp3", ".wav", ".aac", ".flac",
   ".zip", ".rar", ".7z", ".tar.gz",
   ".exe", ".msi", ".iso", ".bin",
@@ -53,7 +67,7 @@ const INTERCEPT_EXTENSIONS = [
 // Intercept browser downloads
 chrome.downloads.onCreated.addListener((downloadItem) => {
   const url = downloadItem.finalUrl || downloadItem.url;
-  const isTarget = INTERCEPT_EXTENSIONS.some(ext => url.toLowerCase().split('?')[0].endsWith(ext));
+  const isTarget = url.startsWith("magnet:") || INTERCEPT_EXTENSIONS.some(ext => url.toLowerCase().split('?')[0].endsWith(ext));
 
   if (isTarget) {
     // Cancel browser default download
@@ -91,7 +105,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 `;
 
 export const EXTENSION_CONTENT_JS = `// Shuvo IDM Chrome Extension - Content Script (Floating Video Sniffer)
-// Injects floating "Download this video" button on YouTube, Facebook, TikTok, and HTML5 players
+// Injects floating "Download this video" button on YouTube, Facebook, BongoBD, TikTok, and HTML5 players
 
 (function initShuvoSniffer() {
   function checkAndAttach() {
@@ -103,7 +117,7 @@ export const EXTENSION_CONTENT_JS = `// Shuvo IDM Chrome Extension - Content Scr
       const btn = document.createElement('div');
       btn.className = 'shuvo-idm-floating-btn';
       btn.innerHTML = \`
-        <button type="button" class="shuvo-btn-inner">
+        <button type="button" class="shuvo-btn-inner" title="Download with Shuvo IDM Pro (8-Thread High Speed)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span>Download with Shuvo IDM</span>
         </button>
@@ -117,12 +131,24 @@ export const EXTENSION_CONTENT_JS = `// Shuvo IDM Chrome Extension - Content Scr
           action: "downloadWithShuvoIDM",
           url: currentUrl
         });
-        alert("Dispatched to Shuvo IDM Pro!\\n" + currentUrl);
       });
 
       const parent = video.parentElement || document.body;
       parent.style.position = parent.style.position || 'relative';
       parent.appendChild(btn);
+    });
+
+    // Magnet Link Interceptor
+    document.querySelectorAll('a[href^="magnet:"]').forEach((magLink) => {
+      if (magLink.dataset.shuvoAttached) return;
+      magLink.dataset.shuvoAttached = "true";
+      magLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        chrome.runtime.sendMessage({
+          action: "downloadWithShuvoIDM",
+          url: magLink.href
+        });
+      });
     });
   }
 
@@ -135,10 +161,10 @@ export const EXTENSION_CONTENT_CSS = `/* Shuvo IDM Floating Video Sniffer Styles
   position: absolute;
   top: 14px;
   right: 14px;
-  z-index: 999999;
-  font-family: system-ui, sans-serif;
+  z-index: 9999999;
+  font-family: system-ui, -apple-system, sans-serif;
   cursor: pointer;
-  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.6));
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.7));
 }
 
 .shuvo-btn-inner {
@@ -147,19 +173,20 @@ export const EXTENSION_CONTENT_CSS = `/* Shuvo IDM Floating Video Sniffer Styles
   gap: 6px;
   background: linear-gradient(135deg, #1d4ed8, #0284c7);
   color: #ffffff;
-  border: 1px solid rgba(56, 189, 248, 0.5);
+  border: 1px solid rgba(56, 189, 248, 0.6);
   border-radius: 8px;
   padding: 6px 12px;
   font-size: 11px;
   font-weight: 700;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.5);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .shuvo-btn-inner:hover {
-  transform: scale(1.04);
+  transform: scale(1.05);
   background: linear-gradient(135deg, #2563eb, #0ea5e9);
+  border-color: #38bdf8;
 }
 `;
 
@@ -168,7 +195,7 @@ export const EXTENSION_POPUP_HTML = `<!DOCTYPE html>
 <head>
   <meta charset="utf-8">
   <style>
-    body { width: 280px; padding: 14px; margin: 0; background: #0f172a; color: #f8fafc; font-family: system-ui, sans-serif; }
+    body { width: 300px; padding: 14px; margin: 0; background: #0f172a; color: #f8fafc; font-family: system-ui, sans-serif; }
     h3 { margin: 0 0 4px; font-size: 14px; color: #38bdf8; }
     p { font-size: 11px; color: #94a3b8; line-height: 1.4; margin: 0 0 10px; }
     .status { background: #1e293b; border: 1px solid #334155; padding: 8px; border-radius: 6px; font-size: 11px; margin-bottom: 10px; }
@@ -178,18 +205,19 @@ export const EXTENSION_POPUP_HTML = `<!DOCTYPE html>
   </style>
 </head>
 <body>
-  <h3>Shuvo IDM Integration Module</h3>
+  <h3>Shuvo IDM Pro Interceptor</h3>
   <p>Developer: SM Shuvo (01997966529)</p>
   <div class="status">
-    <span class="dot"></span> <strong>Bridge:</strong> http://localhost:5000
+    <span class="dot"></span> <strong>Desktop Bridge:</strong> http://localhost:5000
   </div>
-  <button id="sendCurrent">Download Current Page Video</button>
+  <p style="font-size: 10px; color: #cbd5e1;">Supports BongoBD, YouTube, Facebook, Torrents, and Direct Files.</p>
+  <button id="sendCurrent">Download Current Video</button>
   <script>
     document.getElementById('sendCurrent').addEventListener('click', async () => {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (tab && tab.url) {
         chrome.runtime.sendMessage({ action: "downloadWithShuvoIDM", url: tab.url });
-        alert("Sent to Shuvo IDM!");
+        alert("Sent to Shuvo IDM Pro!");
       }
     });
   </script>
