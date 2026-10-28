@@ -28,6 +28,8 @@ jobs:
 
       - name: Compile React Frontend
         run: npm run build
+        env:
+          VITE_CONFIG_NATIVE_IGNORE_WARNING: "true"
 
       - name: Build Windows .EXE Installer
         run: npx electron-builder --win --x64
