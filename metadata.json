@@ -1,0 +1,6 @@
+{
+  "name": "Shuvo IDM Pro - Ultimate Download Manager",
+  "description": "High-performance, ultra-sleek Internet Download Manager Pro with multi-thread chunking, video/audio sniffer, smart queue scheduler, speed limiter, and hardware license manager by SM Shuvo.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
