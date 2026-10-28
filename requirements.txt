@@ -1,0 +1,10 @@
+customtkinter>=5.2.0
+yt-dlp>=2024.0.0
+requests>=2.31.0
+pyperclip>=1.8.2
+imageio-ffmpeg>=0.4.9
+pystray>=0.19.5
+pillow>=10.0.0
+flask>=3.0.0
+flask-cors>=4.0.0
+pyinstaller>=6.0.0
