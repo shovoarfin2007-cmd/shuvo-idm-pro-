@@ -5,6 +5,9 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -17,12 +20,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
       - name: Install Dependencies
         run: |
-          npm install
-          npm install -D electron electron-builder
+          npm install --legacy-peer-deps
+          npm install -D electron electron-builder --legacy-peer-deps
 
       - name: Compile React Frontend
         run: npm run build
@@ -32,10 +34,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload .EXE as Release Artifact
+      - name: Upload .EXE Installer to Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: Shuvo_IDM_Pro_Windows_EXE
           path: |
             dist-electron/*.exe
             dist-electron/win-unpacked/
+          if-no-files-found: warn

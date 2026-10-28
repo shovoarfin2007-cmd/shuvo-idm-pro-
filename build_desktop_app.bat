@@ -25,8 +25,8 @@ node -v
 echo.
 echo [2/4] Installing necessary builder packages (Electron & Electron-Builder)...
 echo (This downloads the standalone Windows packaging engine)
-call npm install
-call npm install -D electron electron-builder
+call npm install --legacy-peer-deps
+call npm install -D electron electron-builder --legacy-peer-deps
 
 echo.
 echo [3/4] Compiling React and Tailwind high-performance frontend...

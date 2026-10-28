@@ -563,8 +563,8 @@ node -v
 
 echo.
 echo Step 2: Installing project dependencies...
-call npm install
-call npm install -D electron electron-builder
+call npm install --legacy-peer-deps
+call npm install -D electron electron-builder --legacy-peer-deps
 
 echo.
 echo Step 3: Compiling React UI assets...
